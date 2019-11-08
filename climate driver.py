@@ -84,7 +84,7 @@ def d_ag(crop, year, CO2_conc = float(input("Enter Change in CO2 Concentration (
         y_counter += 1
     return d_ozone
 if __name__ == "__main__":
-    print(d_ag("rice", 20))
+    print(d_ag("rice", 20)[1])
     
     
     

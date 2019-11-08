@@ -15,7 +15,6 @@ can be easily replicated for the other contributors, once all is set up
 from netCDF4 import Dataset
 import numpy as np
 import math
-
 #%% Load in Data
 
 my_cdf_file = "C:/Users/Jared/Documents/4jared/CESM2_spatial_temp_diff.nc"
@@ -37,6 +36,7 @@ M12 = oh.variables['M12_Run3'][:]
 #%% Extracting Data
 
 lons = fh.variables['longitude'][:]
+print(lons)
 lats = fh.variables['latitude'][:]
 temps = fh.variables['CESM2_ann_avg_temp1'][:]
 crops = {"wheat": [0.024, 0.138, 137, 2.34, 25], "maize": [0.024, 0.034, 124, 2.83, 20], "rice": [0.032, 0.020, 202, 2.47, 25]} 
@@ -61,7 +61,7 @@ precip_data = Dataset(my_precip_file, mode = 'r')
 precip = precip_data.variables['CESM2_ann_avg_precip1'][:]
 #print(precip[1][100])
 #%% Ozone
-def ozoneDriver(crop, year, CO2_conc = float(input("Enter Change in CO2 Concentration (PPM)"))):
+def ozoneDriver(crop, year, CO2_conc):
     d_ozone = []
     y_counter = 0
     if crop == "maize":
@@ -81,7 +81,7 @@ def ozoneDriver(crop, year, CO2_conc = float(input("Enter Change in CO2 Concentr
     return np.asarray(d_ozone)
 
 #%% CO2
-def CO2Driver(crop, year, CO2_conc = float(input("Enter Change in CO2 Concentration (PPM)"))):
+def CO2Driver(crop, year, CO2_conc):
     dCO2 = []
     y_counter = 0
     for ycoord in lats:
@@ -95,7 +95,7 @@ def CO2Driver(crop, year, CO2_conc = float(input("Enter Change in CO2 Concentrat
     return np.asarray(dCO2)
 
 #%% Temperature
-def tempDriver(crop, year, CO2_conc = float(input("Enter Change in CO2 Concentration (PPM)"))):
+def tempDriver(crop, year, CO2_conc):
     d_temp = []
     y_counter = 0
     for ycoord in lats:
@@ -110,17 +110,17 @@ def tempDriver(crop, year, CO2_conc = float(input("Enter Change in CO2 Concentra
     return np.asarray(d_temp)
 
 #%% Precipitation
-def precipDriver(crop, year, CO2_conc = float(input("Enter Change in CO2 Concentration (PPM)"))):
+def precipDriver(crop, year, CO2_conc):
     d_precip = []
     y_counter = 0
     for ycoord in lats:
         x_counter = 0
-        lat_degree_precip = []
+        lat_degree_precip = [] #included for sake of graphing
         for xcoord in lons:
             precip_change = (precip[year][y_counter][x_counter] - precip[0][y_counter][x_counter])/ precip[0][y_counter][x_counter]
             lat_degree_precip.append(precip_change*0.0053) #this gives % yield loss by doing %precip change*%yield loss/%precip change
             x_counter += 1
-        d_precip.append(lat_degree_precip)
+        d_precip.append(lat_degree_precip) 
         y_counter += 1
         '''
         something interesting just happened. I didn't include 
@@ -131,7 +131,7 @@ def precipDriver(crop, year, CO2_conc = float(input("Enter Change in CO2 Concent
 #this output is readable by the spatial temp diff and spatial precip diff files. 
 #Now, I just don't know what programs you want me to run, or what data you have to compare mine against.
 #%% Total Yield Loss
-def totalYieldLoss(crop, year, CO2_conc = float(input("Enter Change in CO2 Concentration (PPM)"))):
+def totalYieldLoss(crop, year, CO2_conc):
     d_ag = []
     y_counter = 0
     if crop == "maize":
@@ -152,8 +152,35 @@ def totalYieldLoss(crop, year, CO2_conc = float(input("Enter Change in CO2 Conce
         d_ag.append(lat_degree_yield)
         y_counter += 1
     return np.asarray(d_ag)
+#%% 
+def yieldLoss4Graph(crop, year, CO2_conc):
+    d_ag = []
+    y_counter = 0
+    if crop == "maize":
+        run = M7
+    else: 
+        run = M12
+    for ycoord in lats:
+        x_counter = 0
+        lat_degree_loss = [] #included for sake of graphing
+        for xcoord in lons:
+            CO2 = CO2_conc*0.0006 # 0.06% per ppm (from Challinor et al., NCC, 2014)
+            crop_temp = (crops[crop][1]*tropics[y_counter] + crops[crop][0]*extratropics[y_counter])*temps[year][y_counter][x_counter]
+            precip_change = (precip[year][y_counter][x_counter] - precip[0][y_counter][x_counter])/ precip[0][y_counter][x_counter]
+            ozone_conc = run[1][y_counter][x_counter]
+            ozone_change = 1 - math.exp(-(ozone_conc / crops[crop][2])**crops[crop][3]) / math.exp(-(crops[crop][4] / crops[crop][2])**crops[crop][3]) 
+            #d_ag.append([ycoord, xcoord, CO2 + crop_temp + precip_change + ozone_change])
+            x_counter += 1
+            lat_degree_loss.append(CO2 + crop_temp + precip_change + ozone_change)
+        y_counter += 1
+        d_ag.append(lat_degree_loss)
+        
+    return np.asarray(d_ag)
+
 #%% Main
 if __name__ == "__main__":
-    print(totalYieldLoss("rice", 20))
+    #print(yieldLoss4Graph("rice", 20, CO2_conc = float(input("Enter Change in CO2 Concentration (PPM)")))[1])
+    print(yieldLoss4Graph("wheat", 20, CO2_conc = float(input("Enter Change in CO2 Concentration (PPM)")))[100])
+
     
         
