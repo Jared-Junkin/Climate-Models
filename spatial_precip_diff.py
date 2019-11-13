@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Nov 13 11:36:53 2019
+
+@author: Jared
+"""
+
 import matplotlib
 matplotlib.use('Agg')
 import os
@@ -84,7 +91,7 @@ CESM2_final_sum_diff             = np.zeros((len(CESM2_lat),len(CESM2_lon)))
 CESM2_lon                        = np.arange(-180,180,1.25)
 #CESM2_final_sum_diff[:,144:]     = CESM2_mean_ann_sum_diff[:,0:144]
 #CESM2_final_sum_diff[:,0:144]    = CESM2_mean_ann_sum_diff[:,144:] ####this line here is the one that gets fed into the graphing later. 
-CESM2_final_sum_diff = precipDriver("rice", 20, CO2_conc = float(input("Enter Change in CO2 Concentration (PPM)")))
+CESM2_final_sum_diff = yieldLoss4Graph("maize", 20, CO2_conc = float(input("Enter Change in CO2 Concentration (PPM)")))
 #print(CESM2_final_sum_diff[144])
 '''
 What is the purpose of the [:,0:144] 
@@ -114,7 +121,6 @@ ax_CESM2     = fig.add_axes([0.01,0.15,0.28,0.80])
 '''
 ax_GFDL      = fig.add_axes([0.30,0.15,0.28,0.80])
 ax_GISS      = fig.add_axes([0.59,0.15,0.28,0.80])
-
 '''
 ax_zonal     = fig.add_axes([0.88,0.225,0.11,0.646])
 ax_colorbar1 = fig.add_axes([0.07,0.10,0.743,0.06])
@@ -135,20 +141,18 @@ n.drawmapboundary(fill_color='#BDBDBD')
 n.fillcontinents(color='#BDBDBD',lake_color='#BDBDBD',zorder=0)
 n.drawcoastlines(color='#000000', linewidth=0.5)
 n.drawcountries(color='#000000', linewidth=0.5)
-
 o = Basemap(projection='robin',lon_0=0,resolution='c',ax=ax_GISS)
 o.drawmapboundary(fill_color='#BDBDBD')
 o.fillcontinents(color='#BDBDBD',lake_color='#BDBDBD',zorder=0)
 o.drawcoastlines(color='#000000', linewidth=0.5)
 o.drawcountries(color='#000000', linewidth=0.5)
-
 '''
 #%% Get levels for colorbar              
 #colorbar_levels = [-16, 1, 2, 4, 5, 6, 7, 7.5, 7.75, 8, 8.5, 9, 9.5, 10, 10.5, 15, 20] #how do I make a continuous grpah?
 colorbar_levels = [-32, -16, -8, -4, -2, 0, 2, 4, 8, 16, 32]
-norm = mpl.colors.BoundaryNorm(colorbar_levels,my_cmap.N)
+norm = mpl.colors.Normalize(vmin = -40, vmax = 40)
 
-norm = mpl.colors.BoundaryNorm(colorbar_levels,my_cmap.N)
+#norm = mpl.colors.BoundaryNorm(colorbar_levels,my_cmap.N)
 #colorbar_levels = mpl.colorbar.ColorbarBase(cmap=cmap,
                                 #norm=norm,
                                 #orientation='horizontal')
@@ -171,20 +175,17 @@ kx,ky       = n(x,y)
 '''
 pcolor([X, Y,] C, **kwargs)
 '''
-map1 = m.pcolormesh(kx,ky,CESM2_final_sum_diff[:,:],cmap=my_cmap,vmin=-40,vmax=40,ax=ax_CESM2,norm=norm)
+map1 = m.pcolormesh(kx,ky,CESM2_final_sum_diff[:,:],cmap=mpl.cm.gist_heat,vmin=-10,vmax=10,ax=ax_CESM2,norm=norm)
 '''
 GFDL_lon    = GFDL_lon[:] + 0.625
 GFDL_lat    = GFDL_lat[:] + 1.0
 x,y         = np.meshgrid(GFDL_lon,GFDL_lat)
 lx,ly       = m(x,y)
-
 map1 = n.pcolormesh(lx,ly,GFDL_final_sum_diff[:,:],cmap=my_cmap,vmin=-40,vmax=40,ax=ax_GFDL,norm=norm)
-
 GISS_lon    = GISS_lon[:] + 1.25
 GISS_lat    = GISS_lat[:] + 1.0
 x,y         = np.meshgrid(GISS_lon,GISS_lat)
 lx,ly       = m(x,y)
-
 map1 = o.pcolormesh(lx,ly,GISS_final_sum_diff[:,:],cmap=my_cmap,vmin=-40,vmax=40,ax=ax_GISS,norm=norm)
 '''
 #%% Make colorbar legend

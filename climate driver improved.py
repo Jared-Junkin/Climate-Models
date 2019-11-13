@@ -118,15 +118,12 @@ def precipDriver(crop, year, CO2_conc):
         lat_degree_precip = [] #included for sake of graphing
         for xcoord in lons:
             precip_change = (precip[year][y_counter][x_counter] - precip[0][y_counter][x_counter])/ precip[0][y_counter][x_counter]
+            #why am I doing precip change? I suppose that makes sense, but I still want to double check that that's the right thing. 
             lat_degree_precip.append(precip_change*0.0053) #this gives % yield loss by doing %precip change*%yield loss/%precip change
             x_counter += 1
         d_precip.append(lat_degree_precip) 
         y_counter += 1
-        '''
-        something interesting just happened. I didn't include 
-        the initializing precip map part, and the code ran anyway. 
-        Will python automatically read in the data like that?
-        '''
+        
     return np.asarray(d_precip)
 #this output is readable by the spatial temp diff and spatial precip diff files. 
 #Now, I just don't know what programs you want me to run, or what data you have to compare mine against.
@@ -164,7 +161,7 @@ def yieldLoss4Graph(crop, year, CO2_conc):
         x_counter = 0
         lat_degree_loss = [] #included for sake of graphing
         for xcoord in lons:
-            CO2 = CO2_conc*0.0006 # 0.06% per ppm (from Challinor et al., NCC, 2014)
+            CO2 = CO2_conc*0.0006 # 0.06% per ppm (from Challinor et al., NCC, 2014) //should be crops[crop][0] for extratropics
             crop_temp = (crops[crop][1]*tropics[y_counter] + crops[crop][0]*extratropics[y_counter])*temps[year][y_counter][x_counter]
             precip_change = (precip[year][y_counter][x_counter] - precip[0][y_counter][x_counter])/ precip[0][y_counter][x_counter]
             ozone_conc = run[1][y_counter][x_counter]
@@ -180,7 +177,7 @@ def yieldLoss4Graph(crop, year, CO2_conc):
 #%% Main
 if __name__ == "__main__":
     #print(yieldLoss4Graph("rice", 20, CO2_conc = float(input("Enter Change in CO2 Concentration (PPM)")))[1])
-    print(yieldLoss4Graph("wheat", 20, CO2_conc = float(input("Enter Change in CO2 Concentration (PPM)")))[100])
+    print(precipDriver("wheat", 20, CO2_conc = float(input("Enter Change in CO2 Concentration (PPM)")))[100])
 
     
         
