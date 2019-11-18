@@ -31,12 +31,7 @@ CESM2_sim2         = f1.variables['CESM2_ann_avg_precip2'][:]
 f1.close()
 
 #%% Arrange data for graphing
-CESM2_mean_ann_sum_diff          = (CESM2_sim1[10:40,:,:] - CESM2_sim2[10:40,:,:]) / CESM2_sim2[10:40,:,:] * 100
-CESM2_mean_ann_sum_diff          = np.average(CESM2_mean_ann_sum_diff[:,:,:],axis=0)
-CESM2_final_sum_diff             = np.zeros((len(CESM2_lat),len(CESM2_lon)))
-CESM2_lon                        = np.arange(-180,180,1.25)
-
-CESM2_final_sum_diff = yieldLoss4Graph("maize", 20, CO2_conc = float(input("Enter Change in CO2 Concentration (PPM)")))
+CESM2_final_sum_diff = yieldLoss4Graph("maize", 20, 0.006)
 #%% Create an empty figure
 fig = plt.figure(figsize=(10,2.2),frameon=False)
 
@@ -90,5 +85,6 @@ ax_zonal.yaxis.grid(True,linestyle='--',which='major',color='k',alpha=0.4,zorder
 ax_zonal.set_title('Zonal Mean [%]',fontsize=8)
 
 #%%% Make titles
-ax_CESM2.set_title('CESM2 $\Delta$ Annual Avg. Precip. [%]',fontsize=9)              
+ax_CESM2.set_title('Combined Yield Loss From all Sources',fontsize=9)  
+plt.savefig('./total_yield_change_output.pdf')            
 

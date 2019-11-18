@@ -36,7 +36,7 @@ M12 = oh.variables['M12_Run3'][:]
 #%% Extracting Data
 
 lons = fh.variables['longitude'][:]
-print(lons)
+#print(lons)
 lats = fh.variables['latitude'][:]
 temps = fh.variables['CESM2_ann_avg_temp1'][:]
 crops = {"wheat": [0.024, 0.138, 137, 2.34, 25], "maize": [0.024, 0.034, 124, 2.83, 20], "rice": [0.032, 0.020, 202, 2.47, 25]} 
@@ -176,8 +176,8 @@ def yieldLoss4Graph(crop, year, CO2_conc):
 
 #%% Main
 if __name__ == "__main__":
-    #print(yieldLoss4Graph("rice", 20, CO2_conc = float(input("Enter Change in CO2 Concentration (PPM)")))[1])
-    print(precipDriver("wheat", 20, CO2_conc = float(input("Enter Change in CO2 Concentration (PPM)")))[100])
+    print(ozoneDriver("rice", 20, CO2_conc = float(input("Enter Change in CO2 Concentration (PPM)")))[1])
+    #print(precipDriver("wheat", 20, CO2_conc = float(input("Enter Change in CO2 Concentration (PPM)")))[100])
 
     
         
