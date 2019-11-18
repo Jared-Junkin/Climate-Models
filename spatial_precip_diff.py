@@ -5,8 +5,6 @@ Created on Wed Nov 13 11:36:53 2019
 @author: Jared
 """
 
-import matplotlib
-matplotlib.use('Agg')
 import os
 os.environ['PROJ_LIB'] = r'C:\Users\Jared\Anaconda3\pkgs\proj4-5.2.0-ha925a31_1\Library\share'
 from pylab import *
@@ -181,4 +179,5 @@ ax_CESM2_3.set_title('Crop Yield Changes due to CO2',fontsize=9)
 
 #%% Save output as PDF
 plt.savefig('./OzoneDriver_output.pdf')
+plt.show()
 ####################################################################################################

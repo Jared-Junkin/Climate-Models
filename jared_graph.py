@@ -86,5 +86,5 @@ ax_zonal.set_title('Zonal Mean [%]',fontsize=8)
 
 #%%% Make titles
 ax_CESM2.set_title('Combined Yield Loss From all Sources',fontsize=9)  
-plt.savefig('./total_yield_change_output.pdf')            
+plt.savefig('./totalYieldLoss_output.pdf')         
 
