@@ -20,20 +20,17 @@ import math
 my_cdf_file = "C:/Users/Jared/Projects_for_Shindell/Climate_Models/CESM_final_temp_average.nc"
 fh = Dataset(my_cdf_file, mode='r')
 #print(fh)
-my_ozone_file = "C:/Users/Jared/Projects_for_Shindell/Climate_Models/CESM2_final_ozone_average.nc"
+my_ozone_file = "C:/Users/Jared/Projects_for_Shindell/Climate_Models/CESM2_final_ozone_allRuns.nc"
 oh = Dataset(my_ozone_file, mode='r')
 #print(oh)
 O_lats = oh.variables['lat'][:] #this is just a list of latitude degrees binwidth 0.5 degrees
 O_lons = oh.variables['lon'][:] #longitude degrees, binwidth 0.5 degrees
 #print(O_lats.shape)
 
-M7 = oh.variables['M7'][:] #M7[#][#][#] <-- M7 ozone value at a certain month, latitude, longitude
-M12 = oh.variables['M12'][:]
-#print(M7.shape)
-#print(M7[1][1][1])
-#print(M12[1][1][1])
-#print(type(months[1])) #floats
-
+M7_3 = oh.variables['M7_3'][:] #M7[#][#][#] <-- M7 ozone value at a certain month, latitude, longitude
+M7_4 = oh.variables['M7_4'][:]
+M12_3 = oh.variables['M12_3'][:]
+M12_4 = oh.variables['M12_4'][:]
 
 #%% Extracting Data
 
@@ -67,32 +64,45 @@ precip = precip_data.variables['temp_diff'][:] #yes, I know this says temp diff.
 
 #%% Ozone
 def ozoneDriver(crop, year, CO2_conc):
-    d_ozone = []
-    y_counter = 0
     if crop == "maize":
-        run = M7
+        run3 = M7_3
+        run4 = M7_4
     else: 
-        run = M12       
-    for ycoord in lats:
-        x_counter = 0
-        lat_degree_ozone = []
-        for xcoord in lons:
-            ozone_conc = run[y_counter][x_counter]
-            #print(ozone_conc)
-            if(math.exp(-(crops[crop][4] / crops[crop][2])**crops[crop][3] != 0)):
-                ozone_change = 1 - math.exp(-(ozone_conc / crops[crop][2])**crops[crop][3]) / math.exp(-(crops[crop][4] / crops[crop][2])**crops[crop][3])
-            else:
-                ozone_change = 0
-            lat_degree_ozone.append(ozone_change)
-            x_counter += 1
-        d_ozone.append(lat_degree_ozone)
-        y_counter += 1
-    myArray = np.asarray(d_ozone)
-    CDFMaker(myArray, 'CESM_ozone_yield_loss2.nc')
-    return myArray
-#this is clearly outputting the right thing, there's just a bug somewhere in there.
-#it thinks that math.exp(-(crops[crop][4] / crops[crop][2])**crops[crop][3] is 0.
-#also, my numbers are still bizarrely low. 
+        run3 = M12_3
+        run4 = M12_4
+    runs = [run3, run4]
+    three = np.array([])
+    four = np.array([])
+    runCounter = 0
+    for run in runs:
+        d_ozone = []
+        y_counter = 0
+        for ycoord in lats:
+            x_counter = 0
+            lat_degree_ozone = []
+            for xcoord in lons:
+                ozone_conc = float(run[y_counter][x_counter])
+                alpha = float(crops[crop][2])
+                beta = float(crops[crop][3])
+                run_constant = float(crops[crop][4])
+               
+                numerator = 1 / e**((ozone_conc / alpha)**beta)
+                denominator = 1 / e**((run_constant / alpha)**beta)
+                ozone_change = (1 - (numerator / denominator)) * 100
+                lat_degree_ozone.append(ozone_change.real)#still don't know why this is complex in the first place. 
+                #the variability between datapoints seems right. But the 
+                x_counter += 1
+            d_ozone.append(lat_degree_ozone)
+            y_counter += 1
+        if(runCounter == 0):
+            three = np.asarray(d_ozone)
+            runCounter += 1
+        if(runCounter == 1):
+            four = np.asarray(d_ozone)
+    final = three - four
+    CDFMaker(final, 'CESM_ozone_yield_loss_change.nc')
+    return final
+
 #%% CO2
 def CO2Driver(crop, year, CO2_conc):
     dCO2 = []
@@ -168,10 +178,6 @@ def totalYieldLoss(crop, year, CO2_conc):
 def yieldLoss4Graph(crop, year, CO2_conc):
     d_ag = []
     y_counter = 0
-    if crop == "maize":
-        run = M7
-    else: 
-        run = M12
     for ycoord in lats:
         x_counter = 0
         lat_degree_loss = [] #included for sake of graphing
@@ -179,17 +185,16 @@ def yieldLoss4Graph(crop, year, CO2_conc):
             CO2 = CO2_conc*0.0006 # 0.06% per ppm (from Challinor et al., NCC, 2014) //should be crops[crop][0] for extratropics
             crop_temp = (crops[crop][1]*tropics[y_counter] + crops[crop][0]*extratropics[y_counter])*temps[y_counter][x_counter]
             precip_change = (precip[y_counter][x_counter] - precip[y_counter][x_counter])/ precip[y_counter][x_counter]
-            ozone_conc = run[y_counter][x_counter]
-            ozone_change = 1 - math.exp(-(ozone_conc / crops[crop][2])**crops[crop][3]) / math.exp(-(crops[crop][4] / crops[crop][2])**crops[crop][3]) 
-            #d_ag.append([ycoord, xcoord, CO2 + crop_temp + precip_change + ozone_change])
             x_counter += 1
-            lat_degree_loss.append(CO2 + crop_temp + precip_change + ozone_change)
+            lat_degree_loss.append(CO2 + crop_temp + precip_change)
         y_counter += 1
         d_ag.append(lat_degree_loss)
-    myArray = np.asarray(d_ag)
-    CDFMaker(myArray, 'CESM_final_yield_loss.nc')
+    myArray = (np.asarray(d_ag) * 100) + ozoneDriver(crop, year, CO2_conc)
+    CDFMaker(myArray, 'CESM_Final_yield_loss_combined.nc')
         
     return myArray
+
+# I'm worried that this isn't outputting anything correct aside from Ozone. It seems like the temperature values are either two low or not properly reflected
 #%% export netCDF file
 def CDFMaker(myArray, myCDF):
     latitude   = np.arange(-90,90,180/len(myArray))
@@ -223,8 +228,8 @@ def CDFMaker(myArray, myCDF):
 
 #%% Main
 if __name__ == "__main__":
-    #print(yieldLoss4Graph("maize", 20,  1))
-    yieldLoss4Graph("maize", 20,  1)
+    print(yieldLoss4Graph("maize", 20,  1))
+    #print(ozoneDriver("maize", 20,  1))
     #myCDF = 'CESM_final_temp_average.nc'
     #print(precipDriver("wheat", 20, CO2_conc = float(input("Enter Change in CO2 Concentration (PPM)")))[100])
 
