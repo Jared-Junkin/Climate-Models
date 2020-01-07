@@ -30,8 +30,8 @@ the output a new netCDF file
 #%% calculate average for precipitation and temp.
 def Average(my_cdf_file): #takes location of CDF file on computer (string), outputs CDF file
     fh = Dataset(my_cdf_file, mode='r')
-    temps1 = fh.variables['CESM2_ann_avg_temp1'][:]
-    temps2 = fh.variables['CESM2_ann_avg_temp2'][:]
+    temps1 = fh.variables['GFDL_ann_avg_precip1'][:]
+    temps2 = fh.variables['GFDL_ann_avg_precip2'][:]
     diff = temps1[10:44,:,:] - temps2[10:44,:,:]
     mean_diff = np.average(diff[:,:],axis=0)
     return CDF_Outputter(mean_diff)
@@ -41,7 +41,7 @@ def OzoneAverage(my_cdf_ozone):
     oh = Dataset(my_cdf_ozone, mode='r')
     M7_3 = oh.variables['M7_Run3'][:]
     M7_4 = oh.variables['M7_Run4'][:]
-    print(type(M7_3))
+    #print(type(M7_3))
     M12_3 = oh.variables['M12_Run3'][:]
     M12_4 = oh.variables['M12_Run4'][:]
     
@@ -69,7 +69,7 @@ def OzoneCDF(M7_3_mean, M7_4_mean, M12_3_mean, M12_4_mean):
         
     latitude   = np.arange(-90,90,180/len(M7_3_mean))
     longitude  = np.arange(-180,180,180/len(M7_3_mean))
-    f1 = Dataset('CESM2_final_ozone_allRuns.nc','w',format='NETCDF4_CLASSIC')
+    f1 = Dataset('GFDL_final_ozone_allRuns.nc','w',format='NETCDF4_CLASSIC')
     
     lat                             = f1.createDimension('lat',len(latitude))
     lon                             = f1.createDimension('lon',len(longitude))
@@ -113,15 +113,15 @@ def OzoneCDF(M7_3_mean, M7_4_mean, M12_3_mean, M12_4_mean):
 def CDF_Outputter(mean_diff): #takes in numpy array, outputs netCDF file with lat and lon variables
     latitude   = np.arange(-90,90,180/len(mean_diff))
     longitude  = np.arange(-180,180,180/len(mean_diff))
-    f1 = Dataset('CESM2_final_temp_average.nc','w',format='NETCDF4_CLASSIC')
+    f1 = Dataset('GFDL_final_precip_average_new.nc','w',format='NETCDF4_CLASSIC')
     lat                             = f1.createDimension('lat',len(latitude))
     lon                             = f1.createDimension('lon',len(longitude))
     
     lat                             = f1.createVariable('lat',np.double,('lat',))
     lon                             = f1.createVariable('lon',np.double,('lon',))
-    temp_diff                       = f1.createVariable('temp_diff',np.float32,('lat','lon'))
+    precip_diff                       = f1.createVariable('precip_diff',np.float32,('lat','lon'))
     
-    f1.description                  = 'In file: average temp difference between control group and methane simulation.'
+    f1.description                  = 'In file: average precip difference between control group and methane simulation.'
     
     lat.units                       = 'degrees_north'
     lat.long_name                   = 'latitude'
@@ -129,22 +129,22 @@ def CDF_Outputter(mean_diff): #takes in numpy array, outputs netCDF file with la
     lon.units                       = 'degrees_east'
     lon.long_name                   = 'longitude'
     lon.comment                     = 'center of grid cell'
-    mean_diff.units                 = 'degrees K'
-    mean_diff.long_name             = 'mean_diff'
+    precip_diff.units                 = 'degrees K'
+    precip_diff.long_name             = 'mean_diff'
     
     f1.variables['lat'][:]          = latitude[:]
     f1.variables['lon'][:]          = longitude[:]
-    f1.variables['temp_diff'][:,:]  = mean_diff[:,:]
+    f1.variables['precip_diff'][:,:]  = mean_diff[:,:]
     
     f1.close()
     
-
+#how come I'm not using that extra variabel
 #%% Main method
 if __name__ == "__main__":
-    CESM_temp = "C:/Users/Jared/Projects_for_Shindell/Climate_Models/4jared/CESM2_spatial_temp_diff_05x05.nc"
-    #Average(CESM_temp)
-    CESM_precip = "C:/Users/Jared/Projects_for_Shindell/Climate_Models/4jared/CESM2_spatial_precip_diff_05x05.nc"
-    #Average(CESM_precip)
-    CESM_ozone = "C:/Users/Jared/Projects_for_Shindell/Climate_Models/4jared/CESM2_agriozone.nc"
-    Average(CESM_temp)
+    GFDL_temp = "C:/Users/Jared/Projects_for_Shindell/Climate_Models/4jared/GFDL_spatial_temp_diff_05x05.nc"
+    #Average(GFDL_temp)
+    GFDL_precip = "C:/Users/Jared/Projects_for_Shindell/Climate_Models/4jared/GFDL_spatial_precip_diff_05x05.nc"
+    Average(GFDL_precip)
+    GFDL_ozone = "C:/Users/Jared/Projects_for_Shindell/Climate_Models/4jared/GFDL_agriozone.nc"
+    #OzoneAverage(GFDL_ozone)
     

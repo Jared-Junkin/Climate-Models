@@ -17,10 +17,10 @@ import numpy as np
 import math
 #%% Load in Data
 
-my_cdf_file = "C:/Users/Jared/Projects_for_Shindell/Climate_Models/CESM_final_temp_average.nc"
+my_cdf_file = "C:/Users/Jared/Projects_for_Shindell/Climate_Models/GFDL_final_temp_average.nc"
 fh = Dataset(my_cdf_file, mode='r')
 #print(fh)
-my_ozone_file = "C:/Users/Jared/Projects_for_Shindell/Climate_Models/CESM2_final_ozone_allRuns.nc"
+my_ozone_file = "C:/Users/Jared/Projects_for_Shindell/Climate_Models/GFDL_final_ozone_allRuns.nc"
 oh = Dataset(my_ozone_file, mode='r')
 #print(oh)
 O_lats = oh.variables['lat'][:] #this is just a list of latitude degrees binwidth 0.5 degrees
@@ -37,7 +37,7 @@ M12_4 = oh.variables['M12_4'][:]
 lons = fh.variables['lon'][:]
 lats = fh.variables['lat'][:]
 temps = fh.variables['temp_diff'][:]
-crops = {"wheat": [0.024, 0.138, 137, 2.34, 25], "maize": [0.024, 0.034, 124, 2.83, 20], "rice": [0.032, 0.020, 202, 2.47, 25]} 
+crops = {"wheat": [0.024, 0.138, 137, 2.34, 25], "maize": [0.024, 0.034, 124, 2.83, 20], "rice": [0.032, 0.020, 202, 2.47, 25], "soy": [0.031, 0.031, 107, 1.58, 20]} 
 #for each value, index 0 represents extratropics, index 1 represents tropics
 #index 2 represents alpha value for ozone
 #index 3 represents beta value for ozone
@@ -58,18 +58,18 @@ for thing in tropics:
     else:
         extratropics.append(1)
 #%% initializing precip_map
-my_precip_file = "C:/Users/Jared/Projects_for_Shindell/Climate_Models/CESM_final_precip_average.nc"
+my_precip_file = "C:/Users/Jared/Projects_for_Shindell/Climate_Models/GFDL_final_precip_average_new.nc"
 precip_data = Dataset(my_precip_file, mode = 'r')
-precip = precip_data.variables['temp_diff'][:] #yes, I know this says temp diff. It's really precip. Settle down, settle down.
+precip = precip_data.variables['precip_diff'][:] 
 
 #%% Ozone
 def ozoneDriver(crop, year, CO2_conc):
-    if crop == "maize":
-        run3 = M7_3
-        run4 = M7_4
-    else: 
+    if crop == "maize" or crop == "soy":
         run3 = M12_3
         run4 = M12_4
+    else: 
+        run3 = M7_3
+        run4 = M7_4
     runs = [run3, run4]
     three = np.array([])
     four = np.array([])
@@ -86,11 +86,10 @@ def ozoneDriver(crop, year, CO2_conc):
                 beta = float(crops[crop][3])
                 run_constant = float(crops[crop][4])
                
-                numerator = 1 / e**((ozone_conc / alpha)**beta)
-                denominator = 1 / e**((run_constant / alpha)**beta)
+                numerator = 1 / math.exp(((ozone_conc / alpha)**beta))
+                denominator = 1 / math.exp(((run_constant / alpha)**beta))
                 ozone_change = (1 - (numerator / denominator)) * 100
-                lat_degree_ozone.append(ozone_change.real)#still don't know why this is complex in the first place. 
-                #the variability between datapoints seems right. But the 
+                lat_degree_ozone.append(ozone_change)
                 x_counter += 1
             d_ozone.append(lat_degree_ozone)
             y_counter += 1
@@ -100,7 +99,7 @@ def ozoneDriver(crop, year, CO2_conc):
         if(runCounter == 1):
             four = np.asarray(d_ozone)
     final = three - four
-    CDFMaker(final, 'CESM_ozone_yield_loss_change.nc')
+    CDFMaker(final, 'GFDL_ozone_yield_loss_change_soy.nc')
     return final
 
 #%% CO2
@@ -116,7 +115,7 @@ def CO2Driver(crop, year, CO2_conc):
         dCO2.append(lat_degree_CO2)
         y_counter += 1
     myArray = np.asarray(dCO2)
-    CDFMaker(myArray, 'CESM_CO2_yield_loss.nc')
+    CDFMaker(myArray, 'GFDL_CO2_yield_loss.nc')
     return myArray
 
 #%% Temperature
@@ -182,7 +181,10 @@ def yieldLoss4Graph(crop, year, CO2_conc):
         x_counter = 0
         lat_degree_loss = [] #included for sake of graphing
         for xcoord in lons:
-            CO2 = CO2_conc*0.0006 # 0.06% per ppm (from Challinor et al., NCC, 2014) //should be crops[crop][0] for extratropics
+            if crop == "maize":
+                CO2 = CO2_conc*0.0002
+            else:
+                CO2 = CO2_conc*0.0008
             crop_temp = (crops[crop][1]*tropics[y_counter] + crops[crop][0]*extratropics[y_counter])*temps[y_counter][x_counter]
             precip_change = (precip[y_counter][x_counter] - precip[y_counter][x_counter])/ precip[y_counter][x_counter]
             x_counter += 1
@@ -190,7 +192,7 @@ def yieldLoss4Graph(crop, year, CO2_conc):
         y_counter += 1
         d_ag.append(lat_degree_loss)
     myArray = (np.asarray(d_ag) * 100) + ozoneDriver(crop, year, CO2_conc)
-    CDFMaker(myArray, 'CESM_Final_yield_loss_combined.nc')
+    CDFMaker(myArray, 'GFDL_Final_yield_loss_soy.nc')
         
     return myArray
 
@@ -228,10 +230,17 @@ def CDFMaker(myArray, myCDF):
 
 #%% Main
 if __name__ == "__main__":
-    print(yieldLoss4Graph("maize", 20,  1))
+    print(yieldLoss4Graph("soy", 20,  1))
+    #print(yieldLoss4Graph("maize", 20, 1))
     #print(ozoneDriver("maize", 20,  1))
     #myCDF = 'CESM_final_temp_average.nc'
     #print(precipDriver("wheat", 20, CO2_conc = float(input("Enter Change in CO2 Concentration (PPM)")))[100])
+    
+    '''  
+    QUESTION: before I had corn as M7 runs and others as M12. I changed it so now it's M12 along with soy
+    because that's what the research paper we pulled the numbers from stipulates. Do you think that is right, 
+    or should I change it back?
+    '''
 
     
         
