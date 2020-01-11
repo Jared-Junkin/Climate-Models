@@ -144,7 +144,7 @@ if __name__ == "__main__":
     GFDL_temp = "C:/Users/Jared/Projects_for_Shindell/Climate_Models/4jared/GFDL_spatial_temp_diff_05x05.nc"
     #Average(GFDL_temp)
     GFDL_precip = "C:/Users/Jared/Projects_for_Shindell/Climate_Models/4jared/GFDL_spatial_precip_diff_05x05.nc"
-    Average(GFDL_precip)
+    #Average(GFDL_precip)
     GFDL_ozone = "C:/Users/Jared/Projects_for_Shindell/Climate_Models/4jared/GFDL_agriozone.nc"
-    #OzoneAverage(GFDL_ozone)
+    OzoneAverage(GFDL_ozone)
     

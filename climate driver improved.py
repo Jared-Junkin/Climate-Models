@@ -8,8 +8,23 @@ Note: this code performs the same functions as climate driver.py. But this code 
 contributor to d_ag split up into seperate functions. It also outputs them in a format which mirrors the inputs
 in spatial_temp_diff.py
 
+1. ADD IN TOTAL TONS AS WELL AS PERCENT (WTIH MAPS OF CURRENT DISTRIBUTIONS AS MASKS)
+2. FIX OZONE SO THAT WE'RE NOT JUST AVERAGING UNIFORMLY FROM MONTHS 4-8
+3. BEGIN DOCUMENTING WHAT WE HAVE RIGHT NOW
+
+4. FARTHER DOWN THE LINE, LOOK INTO ADDING TEMPERATURE EFFECTS FOR VERY HOT DAYS (THIS WILL INVOLVE DAILY DATA FIGURING OUT EXACTLY WHICH TEMPERATURE COUNTS AS A THRESHHOLD)
+
+
 Since Drew is most interested in Ozone, I'm going to start with ozone, understanding that this same process
 can be easily replicated for the other contributors, once all is set up
+
+Right now I am averaging Ozone concentrations from months 4-8. Find growing season months for different parts of the world.
+Growing Season Data Van Dingenen ppg 609 (Dr. Shindell will contact colleagues for growing season tables)
+Temperature thresholds daily data. (After we've done stuff for Ozone, think about it more). Do Tebaldi-Lobell and new temperature threshold paper (in inbox) agree?
+
+Masking and changing units to total tonnage
+Right now I'm averaging years 10-45 for precipitation
+
 """
 #%% Load in modules
 from netCDF4 import Dataset
@@ -230,9 +245,9 @@ def CDFMaker(myArray, myCDF):
 
 #%% Main
 if __name__ == "__main__":
-    print(yieldLoss4Graph("soy", 20,  1))
+    #print(yieldLoss4Graph("soy", 20,  1))
     #print(yieldLoss4Graph("maize", 20, 1))
-    #print(ozoneDriver("maize", 20,  1))
+    print(ozoneDriver("soy", 20,  1))
     #myCDF = 'CESM_final_temp_average.nc'
     #print(precipDriver("wheat", 20, CO2_conc = float(input("Enter Change in CO2 Concentration (PPM)")))[100])
     
